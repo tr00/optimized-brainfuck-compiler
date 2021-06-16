@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "all.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -8,9 +9,10 @@
 enum CMDFLAGS
 {
     FLAG_E,
-    FLAG_V,
-    FLAG_HELP
-}
+    FLAG_VERSION,
+    FLAG_HELP,
+    FLAG_FILE
+};
 
 char *readFileVarLength(FILE *fp){
     printf("reading a file");
@@ -47,7 +49,6 @@ int main(int argc, char **argv){
     int i;
     int flags;
     char * flagargs[32];
-    char * options[10];
     for(i = 0; i < argc; i++){
         char * arg = argv[i];
         printf("%s\n",arg);
@@ -72,7 +73,7 @@ int main(int argc, char **argv){
                             flagargs[FLAG_E] = argv[i+1];
                             break;
                         case 'v'://display version
-                            flags |= 1<<FLAG_V;
+                            flags |= 1<<FLAG_VERSION;
                             break;
                         //if there were other single char flags, we can add them here
                     }
@@ -81,19 +82,33 @@ int main(int argc, char **argv){
                 i += i_increment;
             }
         }else{
-            
+            flags |= 1<<FLAG_FILE;
+            flagargs[FLAG_FILE] = arg;
         }
     }
     
+    char *code;
     
-    //getting the file pointer
-    FILE *fp;
-    char *fname = "README.md";
-    char *content;
-    if ((fp = fopen(fname, "r")) == NULL) {
-        fprintf(stderr, "Error opening the file %s\n", fname);
-        exit(FAILURE);
+    if(flags & (1<<FLAG_HELP)){
+        printf("some help\n");
+        exit(SUCCESS);
+    }else if(flags & (1<<FLAG_VERSION)){
+        printf("version info\n");
+        exit(SUCCESS);
+    }else if(flags & (1<<FLAG_E)){
+        code = flagargs[FLAG_E];
+    }else if(flags & (1<<FLAG_FILE)){
+        FILE *fp;
+        char *fname = flagargs[FLAG_FILE];
+        if ((fp = fopen(fname, "r")) == NULL) {
+            fprintf(stderr, "Error opening the file %s\n", fname);
+            exit(FAILURE);
+        }
+        code = readFileVarLength(fp);
+    }else{//get the contents from stdin
+        code = readFileVarLength(stdin);
     }
-    content = readFileVarLength(fp);
-    printf("%s",content);
+    
+    printf("%s",code);
+    exit(SUCCESS);
 }

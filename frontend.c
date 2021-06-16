@@ -33,11 +33,9 @@ char *readFileVarLength(FILE *fp){
     return buff;
 }
 
-
-int main(int argc, char **argv){
+int parseArgs(int argc, char **argv, char **flagargs){
+    int flags = 0;
     int i;
-    int flags;
-    char * flagargs[32];
     for(i = 1; i < argc; i++){
         char * arg = argv[i];
         printf("(for debug only) %s\n",arg);
@@ -81,10 +79,30 @@ int main(int argc, char **argv){
             flagargs[FLAG_FILE] = arg;
         }
     }
-    
-    char *code;
+    return flags;
+}
+
+
+int main(int argc, char **argv){
+    int i;
+    char * flagargs[32];
+    int flags = parseArgs(argc, argv, flagargs);
     printf("(for debug only) flag integer: %d\n",flags);
     
+    // for debug only, looking inside the flagargs.
+    printf("(for debug only) printing the contents of flagargs\n");
+    for(i = 0; i < 5; i++){
+        printf("(for debug only) %d: ",i);
+        if(flagargs[i] != NULL){
+            printf("%s",flagargs[i]);
+        }else{
+            printf("NULL");
+        }
+        printf("\n");
+    }
+    
+    
+    char * code;
     if(flags & (1<<FLAG_HELP)){
         printf("displaying some help\n");
         exit(SUCCESS);
@@ -102,7 +120,6 @@ int main(int argc, char **argv){
         }
         code = readFileVarLength(fp);
     }else{//get the contents from stdin
-        printf("adsfasdfsa\n");
         code = readFileVarLength(stdin);
     }
     

@@ -1,6 +1,8 @@
 #ifndef __ALL_H_
 #define __ALL_H_
 
+#include <stddef.h>
+
 enum INSTR
 {
     NOOP,
@@ -14,10 +16,11 @@ enum INSTR
     PUTC,
     GETC,
 
+    // feel free to add any amout of extra instructions
+    // but I need the first 9 to be in this order
+
     SETV,
 }
-
-#endif
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -30,3 +33,5 @@ EXP == 62 || \
 EXP == 91 || \
 EXP == 93
 
+
+#endif // everything needs to be above this

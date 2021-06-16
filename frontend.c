@@ -87,9 +87,9 @@ int main(int argc, char **argv){
     int i;
     char * flagargs[32];
     int flags = parseArgs(argc, argv, flagargs);
-    printf("(for debug only) flag integer: %d\n",flags);
     
     // for debug only, looking inside the flagargs.
+    printf("(for debug only) flag integer: %d\n",flags);
     printf("(for debug only) printing the contents of flagargs\n");
     for(i = 0; i < 5; i++){
         printf("(for debug only) %d: ",i);

@@ -20,32 +20,137 @@
  * substitutions for different patterns.
  * this could be avoided but that would slow down insertion.
  * 
+ * Usage:
+ * 
+ * void traverse(char *repr, size_t length)
+ * {
+ *      PatternMatcher handle;
+ * 
+ *      init(&handle);
+ * 
+ *      for(size_t i = 0; i < length; i++)
+ *      {
+ *          shift(&handle, repr[i]);
+ * 
+ *          if(end of peephole)
+ *          {
+ *              i -= reduce(&handle, repr);
+ *          }
+ *      }
+ * 
+ *      cleanup(&handle);
+ * }
+ * 
+ * 
  */
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
 #include "all.h"
 
 #define _NODE_COUNT 9
 
-
-// I will move a lot of this into the header once this is done
-typedef struct 
+// I will move a lot of this into the header once its done
+typedef struct
 {
+    /**
+     * Trie datastructure for pattern lookup
+     */
     struct NODE
     {
         struct NODE *next[_NODE_COUNT];
-        char *subst;
+        size_t index;
     } root;
-    char **substitutions;
-} PatternMatcher;
+    /**
+     * Vector of substitutions
+     */
+    struct
+    {
+        size_t len, cap;
+        uint8_t **substitutions;
+    };
+    /**
+     * Variables used for keeping track of the current 
+     * position inside the trie
+     */
+    struct 
+    {
+        struct NODE *current;
+        size_t depth;
+    };
+} PatternMatcher; // size: 15 * 8B
 
 void init(PatternMatcher *handle)
 {
     handle->root.next[NOOP] = &handle->root;
-    for(size_t i = 1; i < _NODE_COUNT; i++)
+    for (size_t i = 1; i < _NODE_COUNT; i++)
         handle->root.next[i] = NULL;
+
+    // TODO: add default patterns
 }
 
-void shift(PatternMatcher *handle, char instr);
+static struct NODE *newnode()
+{
+    struct NODE *node = safe_malloc(sizeof(struct NODE));
 
-void reduce(PatternMatcher *handle);
+    for(size_t i = 0; i < _NODE_COUNT; i++)
+        node->next[i] = NULL;
+    
+    node->index = 0; // zero is treated as an invalid index
 
-void cleanup(PatternMatcher *handle);
+    return node;
+}
+
+void shift(PatternMatcher *handle, uint8_t instr)
+{
+    if (handle->current)
+    {
+        handle->current = handle->current->next[instr];
+    }
+    else
+    {
+        handle->current = newnode();
+
+    }
+}
+
+size_t reduce(PatternMatcher *handle, uint8_t *repr)
+{
+    size_t index;
+    size_t depth;
+
+    index = handle->current->index;
+    depth = handle->depth;
+
+    if(index)
+    {
+        assert(handle->current != &handle->root);
+    }
+    else
+    {
+        // TODO: make pattern
+    }
+
+    memcpy((void *)(repr - depth), handle->substitutions[index], depth);
+
+    return 0;
+}
+
+void _cleanup(struct NODE *node)
+{
+    for (size_t i = 0; i < _NODE_COUNT; i++)
+        if (node->next[i])
+            _cleanup(node->next[i]);
+
+    free(node);
+}
+
+void cleanup(PatternMatcher *handle)
+{
+    for (size_t i = 1; i < _NODE_COUNT; i++)
+        if (handle->root.next[i])
+            _cleanup(handle->root.next[i]);
+
+    free(handle->substitutions);
+}

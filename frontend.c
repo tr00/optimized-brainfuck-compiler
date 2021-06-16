@@ -3,17 +3,6 @@
 #include <string.h>
 #include "all.h"
 
-#define SUCCESS 0
-#define FAILURE 1
-
-enum CMDFLAGS
-{
-    FLAG_E,
-    FLAG_VERSION,
-    FLAG_HELP,
-    FLAG_FILE
-};
-
 char *readFileVarLength(FILE *fp){
     printf("reading a file\n");
     char *line = NULL;

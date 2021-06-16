@@ -27,8 +27,7 @@ enum OPCODE
     PERMUTE, // vectorized_add((vec_t *)tape, (vec_t *)arg1)
 };
 
-#define SUCCESS 0
-#define FAILURE 1
+// unused
 #define BFCHARS(EXP) EXP == 43 || \
 EXP == 44 || \
 EXP == 45 || \
@@ -37,6 +36,17 @@ EXP == 60 || \
 EXP == 62 || \
 EXP == 91 || \
 EXP == 93
+
+// frontend.c
+#define SUCCESS 0
+#define FAILURE 1
+enum CMDFLAGS
+{
+    FLAG_E,
+    FLAG_VERSION,
+    FLAG_HELP,
+    FLAG_FILE
+};
 
 // memutils.c
 void *safe_malloc(size_t size);

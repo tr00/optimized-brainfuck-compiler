@@ -15,7 +15,7 @@ enum CMDFLAGS
 };
 
 char *readFileVarLength(FILE *fp){
-    printf("reading a file");
+    printf("reading a file\n");
     char *line = NULL;
     size_t linebufflen = 0;
     ssize_t linelen;
@@ -49,18 +49,21 @@ int main(int argc, char **argv){
     int i;
     int flags;
     char * flagargs[32];
-    for(i = 0; i < argc; i++){
+    for(i = 1; i < argc; i++){
         char * arg = argv[i];
-        printf("%s\n",arg);
+        printf("(for debug only) %s\n",arg);
         if(arg[0] == '-'){
             if(arg[1] == '-'){
                 if(strcmp("--help",arg) == 0){
+                    flags |= 1<<FLAG_HELP;
+                }else{
+                    fprintf(stderr, "Unknown option detected %s\n",arg);
                     flags |= 1<<FLAG_HELP;
                 }
             }else{
                 int j = 1;
                 int i_increment = 0;
-                while(arg[j] != NULL){
+                while(arg[j] != '\0'){
                     switch(arg[j]){
                         case 'e'://directly execute
                             i_increment = 1;
@@ -76,6 +79,9 @@ int main(int argc, char **argv){
                             flags |= 1<<FLAG_VERSION;
                             break;
                         //if there were other single char flags, we can add them here
+                        default:
+                            fprintf(stderr, "Unknown option detected %s\n",arg);
+                            flags |= 1<<FLAG_HELP;
                     }
                     j++;
                 }
@@ -88,12 +94,13 @@ int main(int argc, char **argv){
     }
     
     char *code;
+    printf("(for debug only) flag integer: %d\n",flags);
     
     if(flags & (1<<FLAG_HELP)){
-        printf("some help\n");
+        printf("displaying some help\n");
         exit(SUCCESS);
     }else if(flags & (1<<FLAG_VERSION)){
-        printf("version info\n");
+        printf("displaying some version info\n");
         exit(SUCCESS);
     }else if(flags & (1<<FLAG_E)){
         code = flagargs[FLAG_E];
@@ -106,9 +113,10 @@ int main(int argc, char **argv){
         }
         code = readFileVarLength(fp);
     }else{//get the contents from stdin
+        printf("adsfasdfsa\n");
         code = readFileVarLength(stdin);
     }
     
-    printf("%s",code);
+    printf("(for debug only) got thecode: %s\n",code);
     exit(SUCCESS);
 }

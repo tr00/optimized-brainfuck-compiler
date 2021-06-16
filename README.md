@@ -1,1 +1,2 @@
 # optimized-brainfuck-compiler
+test

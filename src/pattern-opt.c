@@ -11,14 +11,7 @@
  * 
  * The patterns are stored in a trie with 
  * O(m) lookup where m is the length of the pattern.
- * 
- * The substitutions are stored in an array
- * which is indexed by each (accepting) pattern
- * so the lookup for substitutions is O(1).
- * 
- * The subst-array may contain duplicate
- * substitutions for different patterns.
- * this could be avoided but that would slow down insertion.
+ * (I will prolly optimize this to a radix tree in the future)
  * 
  * Usage:
  * 
@@ -46,6 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "all.h"
 
@@ -60,16 +54,8 @@ typedef struct
     struct NODE
     {
         struct NODE *next[_NODE_COUNT];
-        size_t index;
+        uint8_t *subst;
     } root;
-    /**
-     * Vector of substitutions
-     */
-    struct
-    {
-        size_t len, cap;
-        uint8_t **substitutions;
-    };
     /**
      * Variables used for keeping track of the current 
      * position inside the trie
@@ -81,20 +67,6 @@ typedef struct
     };
 } PatternMatcher; // size: 15 * 8B
 
-void init(PatternMatcher *handle)
-{
-    handle->root.next[NOOP] = &handle->root;
-    for (size_t i = 1; i < _NODE_COUNT; i++)
-        handle->root.next[i] = NULL;
-
-    handle->len = 0;
-    handle->cap = 40;
-    handle->substitutions = safe_malloc(handle->cap * sizeof(uint8_t *));
-    handle->current = &handle->root;
-    handle->depth = 0;
-    // TODO: add default patterns
-}
-
 static struct NODE *newnode()
 {
     struct NODE *node = safe_malloc(sizeof(struct NODE));
@@ -102,42 +74,70 @@ static struct NODE *newnode()
     for (size_t i = 0; i < _NODE_COUNT; i++)
         node->next[i] = NULL;
 
-    node->index = 0; // zero is treated as an invalid index
+    node->subst = NULL;
 
     return node;
 }
 
+static void insert(PatternMatcher *handle, size_t length, uint8_t *pattern, uint8_t *subst)
+{
+    struct NODE *node = &handle->root;
+
+    for (size_t i = 0; i < length; i++)
+    {
+        if (!node->next[pattern[i]])
+        {
+            node->next[pattern[i]] = newnode();
+        }
+
+        node = node->next[pattern[i]];
+    }
+
+    if (!node->subst)
+    {
+        node->subst = subst;
+    }
+}
+
+void init(PatternMatcher *handle)
+{
+    handle->root.next[NOOP] = &handle->root;
+    for (size_t i = 1; i < _NODE_COUNT; i++)
+        handle->root.next[i] = NULL;
+
+    handle->root.subst = NULL;
+    handle->current = &handle->root;
+    handle->depth = 0;
+
+#define STACK(N, E...) ((uint8_t[N]){E})
+#define HEAP(N, E...) memcpy(safe_malloc(N), STACK(N, E), N)
+
+    insert(handle, 2, STACK(2, SKIP, LOOP), HEAP(2, NOOP, NOOP));
+
+#undef STACK
+#undef HEAP
+}
+
 void shift(PatternMatcher *handle, uint8_t instr)
 {
-    if (handle->current)
-    {
-        handle->current = handle->current->next[instr];
-    }
-    else
-    {
-        handle->current = newnode();
-    }
+    if (!handle->current->next[instr])
+        handle->current->next[instr] = newnode();
+
+    handle->current = handle->current->next[instr];
     handle->depth++;
 }
 
 size_t reduce(PatternMatcher *handle, uint8_t *repr)
 {
-    size_t index;
-    size_t depth;
+    size_t depth = handle->depth;
 
-    index = handle->current->index;
-    depth = handle->depth;
-
-    if (index)
+    if (!handle->current->subst)
     {
-        assert(handle->current != &handle->root);
-    }
-    else
-    {
+        assert(0);
         // TODO: make pattern
     }
 
-    memcpy((void *)(repr - depth), handle->substitutions[index], depth);
+    memcpy((void *)(repr - depth), handle->current->subst, depth);
 
     return 0;
 }
@@ -148,6 +148,8 @@ static void _cleanup(struct NODE *node)
         if (node->next[i])
             _cleanup(node->next[i]);
 
+    if (node->subst)
+        free(node->subst);
     free(node);
 }
 
@@ -156,8 +158,6 @@ void cleanup(PatternMatcher *handle)
     for (size_t i = 1; i < _NODE_COUNT; i++)
         if (handle->root.next[i])
             _cleanup(handle->root.next[i]);
-
-    free(handle->substitutions);
 }
 
 void make_pattern()
@@ -170,6 +170,16 @@ int main()
 
     init(&handle);
 
+    uint8_t *repr = malloc(2);
+    size_t sp = 0;
+
+    shift(&handle, SKIP);
+    shift(&handle, LOOP);
+    reduce(&handle, repr + 2);
+
+    printf("%u %u\n", repr[0], repr[1]);
+
+    free(repr);
     cleanup(&handle);
 
     return 0;

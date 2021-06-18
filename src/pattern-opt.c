@@ -43,35 +43,12 @@
 
 #include "all.h"
 
-#define _NODE_COUNT 9
-
-// I will move a lot of this into the header once its done
-typedef struct
-{
-    /**
-     * Trie datastructure for pattern lookup
-     */
-    struct NODE
-    {
-        struct NODE *next[_NODE_COUNT];
-        uint8_t *subst;
-    } root;
-    /**
-     * Variables used for keeping track of the current 
-     * position inside the trie
-     */
-    struct
-    {
-        struct NODE *current;
-        size_t depth;
-    };
-} PatternMatcher; // size: 15 * 8B
-
 static struct NODE *newnode()
 {
     struct NODE *node = safe_malloc(sizeof(struct NODE));
 
-    for (size_t i = 0; i < _NODE_COUNT; i++)
+    node->next[NOOP] = node;
+    for (size_t i = 1; i < _NODE_COUNT; i++)
         node->next[i] = NULL;
 
     node->subst = NULL;
@@ -129,15 +106,28 @@ void shift(PatternMatcher *handle, uint8_t instr)
 
 size_t reduce(PatternMatcher *handle, uint8_t *repr)
 {
-    size_t depth = handle->depth;
+    struct NODE *root;
+    struct NODE *current;
+    uint8_t *start;
+    size_t depth;
 
-    if (!handle->current->subst)
+    depth = handle->depth;
+    current = handle->current;
+    root = &handle->root;
+    start = (uint8_t *)(repr - depth);
+
+    // repeated noop's
+    if (current == root)
+        return depth;
+
+    // need new subst
+    if (!current->subst)
     {
+        // TODO: make subst
         assert(0);
-        // TODO: make pattern
     }
 
-    memcpy((void *)(repr - depth), handle->current->subst, depth);
+    memcpy((void *)start, current->subst, depth);
 
     return 0;
 }
@@ -164,23 +154,3 @@ void make_pattern()
 {
 }
 
-int main()
-{
-    PatternMatcher handle;
-
-    init(&handle);
-
-    uint8_t *repr = malloc(2);
-    size_t sp = 0;
-
-    shift(&handle, SKIP);
-    shift(&handle, LOOP);
-    reduce(&handle, repr + 2);
-
-    printf("%u %u\n", repr[0], repr[1]);
-
-    free(repr);
-    cleanup(&handle);
-
-    return 0;
-}

@@ -8,14 +8,14 @@ char *readFileVarLength(FILE *fp)
     printf("reading a file\n");
     char *line = NULL;
     size_t linebufflen = 0;
-    size_t linelen;
+    int linelen;
     int ln = 0;
 
     int bufflen = 512;
     int currentPosition = 0;
     char *buff = safe_malloc(bufflen);
 
-    while ((linelen = getline(&line, &linebufflen, fp)) != -1)
+    while ((linelen = getline(&line, &linebufflen, fp)) != EOF)
     {
         //printf("Retrieved line of length %zu:\n", linelen);
         //printf("allocated buffer of length %zu:\n", linebufflen);
@@ -32,7 +32,7 @@ char *readFileVarLength(FILE *fp)
         //printf("current position: %d\n",currentPosition);
     }
 
-    free(line);
+    // free(line);
     return buff;
 }
 
@@ -74,8 +74,8 @@ int parseArgs(int argc, char **argv, char **flagargs)
                             fprintf(stderr, "Expected an inline code after -e option\n");
                             exit(FAILURE);
                         }
-                        flags |= 1 << FLAG_E;
-                        flagargs[FLAG_E] = argv[i + 1];
+                        flags |= 1 << FLAG_EXEC;
+                        flagargs[FLAG_EXEC] = argv[i + 1];
                         break;
                     case 'v': //display version
                         flags |= 1 << FLAG_VERSION;
@@ -103,7 +103,13 @@ int main(int argc, char **argv)
 {
     int i;
     char *flagargs[32];
-    int flags = parseArgs(argc, argv, flagargs);
+    int flags;
+
+    // had to add this bc otherwise Seg Fault
+    for(i = 0; i < 32; i++)
+        flagargs[i] = NULL;
+    
+    flags = parseArgs(argc, argv, flagargs);
 
     // for debug only, looking inside the flagargs.
     printf("(for debug only) flag integer: %d\n", flags);
@@ -133,9 +139,9 @@ int main(int argc, char **argv)
         printf("displaying some version info\n");
         exit(SUCCESS);
     }
-    else if (flags & (1 << FLAG_E))
+    else if (flags & (1 << FLAG_EXEC))
     {
-        code = flagargs[FLAG_E];
+        code = flagargs[FLAG_EXEC];
     }
     else if (flags & (1 << FLAG_FILE))
     {
@@ -154,5 +160,10 @@ int main(int argc, char **argv)
     }
 
     printf("(for debug only) got thecode: %s\n", code);
+
+    size_t length = strlen(code);
+    scan(code, length);
+    printIR((uint8_t *)code, length);
+
     exit(SUCCESS);
 }

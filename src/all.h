@@ -5,6 +5,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 enum OPCODE
 {
@@ -50,6 +52,7 @@ struct INSTR
 
 typedef struct BB
 {
+    size_t id;
     struct INSTR code[BB_MAX_INSTR];
     size_t ptrdiff;
     struct BB *pred, *tail, *link;
@@ -114,5 +117,7 @@ size_t reduce(PatternMatcher *handle, uint8_t *repr);
 
 //
 BasicBlock *allocBB(BasicBlock *pred);
+void normalize(BasicBlock *bb);
+void printBB(FILE *out, BasicBlock *bb);
 
 #endif // everything needs to be above this

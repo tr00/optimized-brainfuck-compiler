@@ -162,8 +162,10 @@ int main(int argc, char **argv)
     printf("(for debug only) got thecode: %s\n", code);
 
     size_t length = strlen(code);
-    scan(code, length);
-    printIR((uint8_t *)code, length);
+    BasicBlock *block = scan(code, length);
+    normalize(block);
+
+    printBB(stdout, block);
 
     exit(SUCCESS);
 }

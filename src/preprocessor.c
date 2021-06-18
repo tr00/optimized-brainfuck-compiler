@@ -120,9 +120,11 @@ BasicBlock *scan(char *source, size_t length)
 
     node = root = allocBB(NULL);
 
+    instr.opc = NOOP;
     instr.reg = 0;
     instr.src = 0;
     instr.dst = 0;
+    instr.arg = 0;
 
     for (size_t i = 0; i < length; i++)
     {
@@ -130,22 +132,51 @@ BasicBlock *scan(char *source, size_t length)
         {
         case '+':
             instr.opc = INCR;
-            instr.arg = 1;
             break;
         case '-':
             instr.opc = DECR;
-            instr.arg = 1;
             break;
+        case '<':
+            instr.opc = PREV;
+            break;
+        case '>':
+            instr.opc = NEXT;
+            break;
+        case '.':
+            instr.opc = PUTC;
+            break;
+        case ',':
+            instr.opc = GETC;
+            break;
+        case '[':
+            instr.opc = SKIP;
+            goto NEWBLOCK;
+        case ']':
+            instr.opc = LOOP;
+            goto NEWBLOCK;
         default:
             continue;
         }
 
+        instr.arg = 1;
+        char tok = source[i];
+
+        while (source[++i] == tok)
+        {
+            instr.arg++;
+        }
+        i--;
+
         if (cp == BB_MAX_INSTR)
+        NEWBLOCK:
         {
             BasicBlock *newnode = allocBB(node);
             node->link = newnode;
             node = newnode;
+            cp = 0;
         }
+
+            node->code[cp++] = instr;
     }
     return root;
 }

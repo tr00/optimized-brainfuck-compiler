@@ -14,9 +14,16 @@ BasicBlock *allocBB(BasicBlock *pred)
     bb->link = NULL;
     bb->ptrdiff = 0;
 
+    for (size_t i = 0; i < BB_MAX_INSTR; i++)
+        bb->code[i].opc = NOOP;
+
     return bb;
 }
 
+/**
+ * 
+ * 
+ */
 void normalize(BasicBlock *bb)
 {
     size_t offset;
@@ -55,6 +62,7 @@ void normalize(BasicBlock *bb)
     }
 
     bb->ptrdiff = ptrdiff;
+    bb->offset = offset;
     ptrdiff = offset;
 
     for (size_t i = 0, j = 0; i < BB_MAX_INSTR; i++)
@@ -76,14 +84,17 @@ void normalize(BasicBlock *bb)
                     .opc = NOOP,
                 };
             }
-            bb->code[j++].src = ptrdiff;
+            bb->code[j].src = bb->code[j].dst = ptrdiff;
+            j++;
             break;
         }
         case PREV:
             ptrdiff--;
+            bb->code[i].opc = NOOP;
             break;
         case NEXT:
             ptrdiff++;
+            bb->code[i].opc = NOOP;
             break;
         default:
             break;
@@ -91,11 +102,22 @@ void normalize(BasicBlock *bb)
     }
 }
 
+/**
+ * null sequence + combine operations
+ * 
+ */
+void peepopt(BasicBlock *bb)
+{
+    for (size_t i = 0; i < BB_MAX_INSTR; i++)
+    {
+    }
+}
+
 void printBB(FILE *out, BasicBlock *bb)
 {
     struct INSTR p;
 
-    fprintf(out, "BB%p:\n", bb);
+    fprintf(out, "BB%ul(offset = %u)\n", bb->id, bb->offset);
     for (size_t i = 0; i < BB_MAX_INSTR; i++)
     {
         p = bb->code[i];
@@ -126,7 +148,7 @@ void printBB(FILE *out, BasicBlock *bb)
             fprintf(out, "\tnoop\n");
             break;
         default:
-            fprintf(out, "\t<unknown>\n");
+            fprintf(out, "\t<unknown:%u>\n", p.opc);
             break;
         }
     }

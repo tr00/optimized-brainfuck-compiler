@@ -9,11 +9,14 @@ OBJ=$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
 
 $(info $(shell mkdir -p $(OBJDIR)))
 
-all:
+all: prog
 
-debug: CFLAGS=-Wall -Wextra -pedantic -g -fsanitize=address
-debug: $(OBJ)
+prog: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@
+
+debug: clean
+debug: CFLAGS=-Wall -Wextra -pedantic -g -fsanitize=address
+debug: prog
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@

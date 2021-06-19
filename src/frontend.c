@@ -159,7 +159,7 @@ int main(int argc, char **argv)
         code = readFileVarLength(stdin);
     }
 
-    printf("(for debug only) got thecode: %s\n", code);
+    printf("(for debug only) got the code: %s\n", code);
 
     size_t length = strlen(code);
     BasicBlock *block = scan(code, length);

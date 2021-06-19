@@ -54,7 +54,7 @@ typedef struct BB
 {
     size_t id;
     struct INSTR code[BB_MAX_INSTR];
-    size_t ptrdiff;
+    size_t offset, ptrdiff;
     struct BB *pred, *tail, *link;
 } BasicBlock;
 
@@ -84,7 +84,6 @@ enum CMDFLAGS
 
 // scanner.c
 BasicBlock *scan(char *source, size_t length);
-void printIR(const uint8_t *repr, size_t length);
 
 // memutils.c
 void *safe_malloc(size_t size);

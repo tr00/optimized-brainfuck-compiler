@@ -119,4 +119,6 @@ BasicBlock *allocBB(BasicBlock *pred);
 void normalize(BasicBlock *bb);
 void printBB(FILE *out, BasicBlock *bb);
 
+#define TEST "ASDFiiiii"
+
 #endif // everything needs to be above this

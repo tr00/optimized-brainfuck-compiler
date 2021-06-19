@@ -1,5 +1,6 @@
-CC=clang
-CFLAGS=-Wall
+CC     = clang
+CFLAGS = -Wall
+DEPS   = src/all.h
 
 SRCDIR=src
 OBJDIR=obj
@@ -18,7 +19,7 @@ debug: clean
 debug: CFLAGS=-Wall -Wextra -pedantic -g -fsanitize=address
 debug: prog
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

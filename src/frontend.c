@@ -101,7 +101,6 @@ int parseArgs(int argc, char **argv, char **flagargs)
 
 int main(int argc, char **argv)
 {
-    printf("test%s",TEST);
     int i;
     char *flagargs[32];
     int flags;

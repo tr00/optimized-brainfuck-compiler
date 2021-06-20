@@ -7,6 +7,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <immintrin.h>
+
+typedef uint8_t U8;
+
+typedef uint16_t U16;
+typedef uint32_t U32;
+typedef uint64_t U64;
+
+typedef __m128i U128;
+typedef __m256i U256;
+typedef __m512i U512;
+
 
 enum OPCODE
 {
@@ -24,29 +36,37 @@ enum OPCODE
     // feel free to add any amount of extra instructions
     // but I need the first 9 to be in this order
 
+    // rx += 0xA0
+    INCR, INCR2, INCR4, /**/
+
+    // rx -= 0xA0
+    DECR, DECR2, DECR4, /**/
+
+    // rx += ry
+    ADD, ADD2, ADD4, /* ADD8, ADD16, ADD32, ADD64, */
+
+    // rx = 0xA0
+    LIV, LIV2, LIV4, /* LIV8, LIV16, LIV32, LIV64, */
+
+    // rx = 0x00
+    LIZ, LIZ2, LIZ4, /* LIZ8, LIZ16, LIZ32, LIZ64, */
+
+    // rx = tape[cp];
+    LCC, LCC2, LCC4, /* LCC8, LCC16, LCC32, LCC64, */
+
+    // tape[cp] = rx;
+    STR, STR2, STR4, /* STR8, STR16, STR32, STR64, */
+
     SETV,
     EXIT,
-
-    VALDIFF, // tape[ptr] += arg1
-    PTRDIFF, // ptr += arg1
-    PERMUTE, // vectorized_add((vec_t *)tape, (vec_t *)arg1)
 };
 
-
-#define DST 0x04
-#define SRC 0x02
-#define ARG 0x01
-
-#define isregister(reg, flag) ((reg) & (flag))
-
-// incr  %dst, %src, $arg === r[%dst] += $arg * r[%src];
-// some instructions might interpret the args differently
 struct INSTR
 {
-    uint8_t opc : 5;
-    uint8_t reg : 3;
-    uint8_t dst, src, arg;
-}; // 32bit
+    uint8_t opc : 6;
+    uint8_t dst : 2; // register
+    uint8_t arg;
+};
 
 #define BB_MAX_INSTR 16
 
@@ -62,7 +82,7 @@ extern const char *opc2str[];
 
 // unused
 #define BFCHARS(EXP) \
-        EXP == 43 || \
+    EXP == 43 ||     \
         EXP == 44 || \
         EXP == 45 || \
         EXP == 46 || \
@@ -70,6 +90,13 @@ extern const char *opc2str[];
         EXP == 62 || \
         EXP == 91 || \
         EXP == 93
+
+// error handling
+#define throw(MSG, F...)         \
+    {                            \
+        fprintf(stderr, MSG, F); \
+        exit(EXIT_FAILURE);      \
+    }
 
 // frontend.c
 #define SUCCESS 0
@@ -118,6 +145,5 @@ size_t reduce(PatternMatcher *handle, uint8_t *repr);
 BasicBlock *allocBB(BasicBlock *pred);
 void normalize(BasicBlock *bb);
 void printBB(FILE *out, BasicBlock *bb);
-
 
 #endif // everything needs to be above this

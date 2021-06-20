@@ -1,7 +1,5 @@
 /**
- * assumptions:
- *  - 64bit cache lines
- *  - 8bit aligned memory addresses
+ * UNUSED prolly gonna delete this
  */
 #include <assert.h>
 

@@ -9,7 +9,6 @@ char *readFileVarLength(FILE *fp)
     char *line = NULL;
     size_t linebufflen = 0;
     int linelen;
-    int ln = 0;
 
     int bufflen = 512;
     int currentPosition = 0;
@@ -46,26 +45,52 @@ int parseArgs(int argc, char **argv, char **flagargs)
         printf("(for debug only) %s\n", arg);
         if (arg[0] == '-')
         {
+            int i_increment = 0;
             if (arg[1] == '-')
             {
+                // *********** Multi letter options here***********
                 if (strcmp("--help", arg) == 0)
                 {
                     flags |= 1 << FLAG_HELP;
+                }
+                else if(strcmp("--compiler", arg) == 0)
+                {   //specifies the conpiler
+                    flags |= 1 << FLAG_COMPILER;
+                    i_increment = 1;
+                    if (i + 1 >= argc)
+                    {
+                        fprintf(stderr, "Expected an output filename after -o option\n");
+                        exit(FAILURE);
+                    }
+                    flagargs[FLAG_COMPILER] = argv[i + 1];
+                }
+                else if(strcmp("--interpreter", arg) == 0)
+                {   //specifies the interpreter
+                    flags |= 1 << FLAG_INTERPRET;
+                    flags |= 1 << FLAG_INTERPRETER;
+                    i_increment = 1;
+                    if (i + 1 >= argc)
+                    {
+                        fprintf(stderr, "Expected an output filename after -o option\n");
+                        exit(FAILURE);
+                    }
+                    flagargs[FLAG_INTERPRETER] = argv[i + 1];
                 }
                 else
                 {
                     fprintf(stderr, "Unknown option detected %s\n", arg);
                     flags |= 1 << FLAG_HELP;
                 }
+                // *********** Multi letter options end***********
             }
             else
             {
                 int j = 1;
-                int i_increment = 0;
                 while (arg[j] != '\0')
                 {
                     switch (arg[j])
                     {
+                    // *********** Single letter options here***********
                     case 'e': //directly execute
                         i_increment = 1;
                         //because the next arg is determined to be the code. don't want it to parse as a cmd argument
@@ -80,15 +105,30 @@ int parseArgs(int argc, char **argv, char **flagargs)
                     case 'v': //display version
                         flags |= 1 << FLAG_VERSION;
                         break;
+                    case 'o': //specify output filename
+                        i_increment = 1;
+                        if (i + 1 >= argc)
+                        {
+                            fprintf(stderr, "Expected an output filename after -o option\n");
+                            exit(FAILURE);
+                        }
+                        flags |= 1 << FLAG_OUTFILE;
+                        flagargs[FLAG_OUTFILE] = argv[i + 1];
+                        break;
+                    case 'i': //interpret mode
+                        flags |= 1 << FLAG_INTERPRET;
+                        flagargs[FLAG_OUTFILE] = argv[i + 1];
+                        break;
                     //if there were other single char flags, we can add them here
                     default:
                         fprintf(stderr, "Unknown option detected %s\n", arg);
                         flags |= 1 << FLAG_HELP;
+                    // *********** Single letter options end***********
                     }
                     j++;
                 }
-                i += i_increment;
             }
+            i += i_increment;
         }
         else
         {

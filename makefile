@@ -16,7 +16,7 @@ prog: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@
 
 debug: clean
-debug: CFLAGS=-Wall -Wextra -pedantic -g -fsanitize=address
+debug: CFLAGS += -Wall -Wextra -pedantic -g -fsanitize=address
 debug: prog
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPS)

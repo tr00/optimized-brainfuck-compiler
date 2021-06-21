@@ -202,10 +202,7 @@ int main(int argc, char **argv)
     printf("(for debug only) got the code: %s\n", code);
 
     size_t length = strlen(code);
-    BasicBlock *block = scan(code, length);
-    normalize(block);
-
-    printBB(stdout, block);
+    scan(code, length);
 
     exit(SUCCESS);
 }

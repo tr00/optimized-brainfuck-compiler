@@ -36,27 +36,7 @@ enum OPCODE
     // feel free to add any amount of extra instructions
     // but I need the first 9 to be in this order
 
-    // rx += 0xA0
-    INCR, INCR2, INCR4, /**/
-
-    // rx -= 0xA0
-    DECR, DECR2, DECR4, /**/
-
-    // rx += ry
-    ADD, ADD2, ADD4, /* ADD8, ADD16, ADD32, ADD64, */
-
-    // rx = 0xA0
-    LIV, LIV2, LIV4, /* LIV8, LIV16, LIV32, LIV64, */
-
-    // rx = 0x00
-    LIZ, LIZ2, LIZ4, /* LIZ8, LIZ16, LIZ32, LIZ64, */
-
-    // rx = tape[cp];
-    LCC, LCC2, LCC4, /* LCC8, LCC16, LCC32, LCC64, */
-
-    // tape[cp] = rx;
-    STR, STR2, STR4, /* STR8, STR16, STR32, STR64, */
-
+    SETZ, // tape[cp] = 0;
     SETV,
     EXIT,
 };
@@ -67,16 +47,6 @@ struct INSTR
     uint8_t dst : 2; // register
     uint8_t arg;
 };
-
-#define BB_MAX_INSTR 16
-
-typedef struct BB
-{
-    size_t id;
-    struct INSTR code[BB_MAX_INSTR];
-    size_t offset, ptrdiff;
-    struct BB *pred, *tail, *link;
-} BasicBlock;
 
 extern const char *opc2str[];
 
@@ -111,7 +81,21 @@ enum CMDFLAGS
     FLAG_INTERPRET,
     FLAG_COMPILER,
     FLAG_INTERPRETER
+
+    /*  */
 };
+
+// blocks.c
+#define BB_MAX_INSTR 16
+
+
+typedef struct BB
+{
+    U8 code[BB_MAX_INSTR];
+    struct BB *pred;
+    struct BB *next;
+    size_t label;
+} BasicBlock;
 
 // scanner.c
 BasicBlock *scan(char *source, size_t length);

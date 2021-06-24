@@ -202,7 +202,6 @@ int main(int argc, char **argv)
     printf("(for debug only) got the code: %s\n", code);
 
     size_t length = strlen(code);
-    scan(code, length);
 
     exit(SUCCESS);
 }

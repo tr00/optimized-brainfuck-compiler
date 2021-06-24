@@ -1,4 +1,8 @@
+#ifdef __linux__
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -36,7 +40,7 @@ void *safe_realloc(void *ptr, size_t size)
     return ptr;
 }
 
-void *safe_mmap(char *data, size_t size)
+void *safe_mmap(const char *data, size_t size)
 {
     void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 

@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <immintrin.h>
+// #include <immintrin.h>
 
 typedef uint8_t U8;
 
@@ -15,10 +15,9 @@ typedef uint16_t U16;
 typedef uint32_t U32;
 typedef uint64_t U64;
 
-typedef __m128i U128;
-typedef __m256i U256;
-typedef __m512i U512;
-
+// typedef __m128i U128;
+// typedef __m256i U256;
+// typedef __m512i U512;
 
 enum OPCODE
 {
@@ -33,19 +32,52 @@ enum OPCODE
     PUTC,
     GETC,
 
-    // feel free to add any amount of extra instructions
-    // but I need the first 9 to be in this order
-
     SETZ, // tape[cp] = 0;
     SETV,
+
+    FNZL,
+    FNZR,
     EXIT,
 };
 
+struct NODE;
+
 struct INSTR
 {
-    uint8_t opc : 6;
-    uint8_t dst : 2; // register
-    uint8_t arg;
+    U8 opc;
+    U8 idx;
+    U8 arg;
+    U8 : 8;
+};
+
+struct LOOP
+{
+    struct INSTR *arr;
+};
+
+struct TRACE
+{
+    struct NODE *nodes;
+};
+
+struct NODE
+{
+    /**
+     * we could pack these bits into the
+     * pointers but thats risky so this is fine for now
+     */
+    enum _NODE_FLAG
+    {
+        NODE_FLAG_LOOP,
+        NODE_FLAG_INSTR,
+        NODE_FLAG_TRACE,
+    } flag;
+    union _NODE_DATA
+    {
+        struct LOOP *loop;
+        struct INSTR *instr;
+        struct TRACE *trace;
+    };
 };
 
 extern const char *opc2str[];
@@ -85,53 +117,20 @@ enum CMDFLAGS
     /*  */
 };
 
-// blocks.c
-#define BB_MAX_INSTR 16
-
-
-typedef struct BB
-{
-    U8 code[BB_MAX_INSTR];
-    struct BB *pred;
-    struct BB *next;
-    size_t label;
-} BasicBlock;
-
 // scanner.c
-BasicBlock *scan(char *source, size_t length);
+U8 *scan(char *source, size_t length);
 
 // memutils.c
 void *safe_malloc(size_t size);
 void *safe_calloc(size_t size);
 void *safe_realloc(void *ptr, size_t size);
+void *safe_mmap(const char *data, size_t size);
+void safe_munmap(void *ptr, size_t size);
 // TODO: safe_ string.h functions
-// TODO: safe_ mmap functions
 
-// pattern-opt.c
-#define _NODE_COUNT 9
+// interpreter.c
+void interpret(const char *source);
 
-typedef struct
-{
-    struct NODE
-    {
-        struct NODE *next[_NODE_COUNT];
-        uint8_t *subst;
-    } root;
-    struct
-    {
-        struct NODE *current;
-        size_t depth;
-    };
-} PatternMatcher;
-
-void init(PatternMatcher *handle);
-void cleanup(PatternMatcher *handle);
-void shift(PatternMatcher *handle, uint8_t instr);
-size_t reduce(PatternMatcher *handle, uint8_t *repr);
-
-//
-BasicBlock *allocBB(BasicBlock *pred);
-void normalize(BasicBlock *bb);
-void printBB(FILE *out, BasicBlock *bb);
+size_t optimize(struct TRACE *dest, const char *source, size_t ip);
 
 #endif // everything needs to be above this

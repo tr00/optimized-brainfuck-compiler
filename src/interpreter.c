@@ -15,6 +15,9 @@ void run_raw(U8 *source, size_t length)
     U8 *tape = safe_calloc(MAX_CELL_COUNT);
     size_t *labels = safe_malloc(MAX_LOOP_DEPTH * sizeof(size_t));
 
+    cp = 0;
+    sp = 0;
+
     for (ip = 0; ip < length; ip++)
     {
         switch (source[ip])
@@ -81,16 +84,33 @@ void run_raw(U8 *source, size_t length)
     free(tape);
 }
 
-
-/**
- * vm based execution (richer instruction set)
- */
-void run_opt(U8 *source, size_t length)
+size_t invoke_trace(struct TRACE *trace, U8 *tape, size_t cp)
 {
 
 }
 
-void run_jit(U8 *source, size_t length)
+void interpret(const char *source)
 {
+    size_t ip; // instruction pointer 
+    size_t cp; // cell pointer
 
+    U8 *tape;
+
+    // TODO: alloc & inits
+
+    while(source[ip])
+    {
+        switch(source[ip])
+        {
+            case '[':
+            {
+                struct TRACE *trace;
+
+                ip = optimize(trace, source, ip);
+
+                cp = invoke_trace(trace, tape, cp);
+            }
+        }
+    }
 }
+

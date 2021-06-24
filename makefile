@@ -1,5 +1,5 @@
 CC     = clang
-CFLAGS = -Wall
+CFLAGS = -Wall -std=c11
 DEPS   = src/all.h
 
 SRCDIR=src
